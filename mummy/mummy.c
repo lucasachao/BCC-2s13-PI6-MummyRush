@@ -1,6 +1,7 @@
 #include "headers/jogo.h"
 #include "headers/menu.h"
 
+/*THREAD*/
 void *recebe_info(void *arg)
 {
 	bool *at = arg;
@@ -30,7 +31,7 @@ void *recebe_info(void *arg)
 	return NULL;
 }
 
-
+/*MAIN*/
 int main()
 {
 	//splashscreen / inicializa componetes do allegro

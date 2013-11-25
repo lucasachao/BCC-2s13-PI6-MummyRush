@@ -81,8 +81,10 @@ int prepara_rede()
 	printf("Socket aberto!\n");
 
 	printf("Digite o endereço do servidor\n");
+	server = malloc(18*sizeof(int));
 	scanf("%s", server);
-	host = gethostbyname("localhost");
+	host = gethostbyname(server);
+	free(server);
 
 	if(host == NULL)
 	{
@@ -180,8 +182,8 @@ void prepara_clientes()
 			ok = conectados;
 			int aux = 0;
 			for(int i = 0; i < FD_SETSIZE; i++)
-				if(FD_ISSET(i, &conjunto))
-					if(i != sock)
+				if(FD_ISSET(i, &conjunto))//para cada cliente
+					if(i != sock)//tirando o sock de listen
 					{
 						write(i, &ok, 1);//envia numero de jogadores
 						printf("comecou o jogo para sock %d!\n", i);

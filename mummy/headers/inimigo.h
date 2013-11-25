@@ -19,13 +19,14 @@ struct Inimigo{
 	float dx;
 	float dy;
 	bool movimento;
+	pthread_mutex_t mtx;
 };
 clock_t t1;
 
 int num_inimigos;
 struct Inimigo *inimigos;
 
-void prepara_inimigos();
+void prepara_inimigos(int qtd_inimigos);
 void finaliza_inimigos();
 void move_inimigos();
 void desenha_inimigos();

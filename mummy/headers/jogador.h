@@ -31,7 +31,7 @@ int num_jogadores, id_jogador;
 int *id_jogadores;
 bool movimento;
 
-//teclas de mira de movimento
+//teclas de mira e de movimento
 bool pos[4];
 bool mir[4];
 
