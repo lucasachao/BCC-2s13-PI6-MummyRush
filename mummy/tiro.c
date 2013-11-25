@@ -5,7 +5,10 @@ void prepara_tiro()
 	velocidade_tiro = 10;
 
 	for(int i = 0; i < 300; i++)
+	{
 		tiro[i].ativa = false;
+		pthread_mutex_init(&tiro[i].mtx, NULL);
+	}
 }
 
 void adiciona_tiro(int angulo, float x, float y, int aux)

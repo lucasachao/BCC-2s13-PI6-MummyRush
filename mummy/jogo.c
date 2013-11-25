@@ -16,6 +16,9 @@ int prepara_jogo()
 	//prepara variaveis de bala
 	prepara_tiro();
 
+	//prepara variaveis de inimigos
+	prepara_inimigos_client(10);
+
 	//load de mapa
 	bg = al_load_bitmap("images/exemplo.jpg");
 	if(!bg)
@@ -37,6 +40,10 @@ void finaliza_jogo()
 {
 	al_destroy_bitmap(bg);
 	finaliza_jogadores();
+
+	for(int i = 0; i < 300; i++)
+		pthread_mutex_destroy(&tiro[i].mtx);
+	finaliza_inimigos_client();
 }
 
 void atualiza()
@@ -72,5 +79,5 @@ void desenha()
 	desenha_bg();
 	desenha_jogadores();
 	desenha_tiro();
-	//desenha_inimigos();
+	desenha_inimigos();
 }

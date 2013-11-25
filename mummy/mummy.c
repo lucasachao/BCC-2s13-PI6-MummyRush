@@ -10,24 +10,31 @@ void *recebe_info(void *arg)
 
 	while(buffer.tipo != 9)
 	{
-		read(sock, &buffer, sizeof(struct Buffer));
-		//printf("recebeu! %d\n", buffer.tipo);
-		switch(buffer.tipo)
+		if(read(sock, &buffer, sizeof(struct Buffer)) == 0)
 		{
-			case 0:
-				atualiza_jogadores(buffer);
-			break;
-
-			case 1:
-				adiciona_tiro(buffer.angulo, buffer.x, buffer.y, 1);
-			break;
-
-			case 2:
-			break;
+			printf("Servidor desconectado!\n");
+			return NULL;
 		}
-		*at = true;
-	}
+		else
+		{
+			//printf("recebeu! %d\n", buffer.tipo);
+			switch(buffer.tipo)
+			{
+				case 0:
+					atualiza_jogadores(buffer);
+				break;
 
+				case 1:
+					adiciona_tiro(buffer.angulo, buffer.x, buffer.y, 1);
+				break;
+
+				case 2:
+					atualiza_inimigo_client(buffer);
+				break;
+			}
+			*at = true;
+		}
+	}
 	return NULL;
 }
 
@@ -59,13 +66,6 @@ int main()
 	//load de imagens/inicializacao de variaveis/prepara colisao
 	if(prepara_jogo() == -1)
 		finaliza_allegro();
-
-	//inicializa mutex
-	for(int i = 0; i < num_jogadores; i++)
-		pthread_mutex_init(&jogadores[i].mtx, NULL);
-	for(int i = 0; i < 300; i++)
-		pthread_mutex_init(&tiro[i].mtx, NULL);
-
 
 	//começou o jogo
 	doexit = false;
@@ -114,11 +114,6 @@ int main()
 		printf("Erro ao tentar juntar thread do server!\n");
 	else
 		printf("thread do server encerrada com sucesso!\n");
-
-	for(int i = 0; i < num_jogadores; i++)
-		pthread_mutex_destroy(&jogadores[i].mtx);
-	for(int i = 0; i < 300; i++)
-		pthread_mutex_destroy(&tiro[i].mtx);
 
 	finaliza_rede();
 	finaliza_jogo();//destroi imagens

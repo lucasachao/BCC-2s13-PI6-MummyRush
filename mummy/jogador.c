@@ -1,6 +1,6 @@
 #include "headers/jogador.h"
 
-int velocidade;//, count_balas;
+int velocidade;
 
 int prepara_jogadores()
 {
@@ -23,6 +23,9 @@ int prepara_jogadores()
 		jogadores[i].passo = 0;
 		jogadores[i].bouncer = NULL;
 	}
+
+	for(int i = 0; i < num_jogadores; i++)
+		pthread_mutex_init(&jogadores[i].mtx, NULL);
 
 	int gap = 20;
 	//preenche somente os que vao jogar
@@ -77,7 +80,10 @@ int prepara_jogadores()
 void finaliza_jogadores()
 {
 	for(int i = 0; i < num_jogadores; i++)
+	{
 		al_destroy_bitmap(jogadores[i].bouncer);
+		pthread_mutex_destroy(&jogadores[i].mtx);
+	}
 }
 
 void atualiza_jogadores(struct Buffer buffer)
@@ -95,9 +101,10 @@ void atualiza_jogadores(struct Buffer buffer)
 			jogadores[i].y = buffer.y;
 			jogadores[i].angulo = buffer.angulo;
 			//printf("atualizou!\n");
+			pthread_mutex_unlock(&jogadores[i].mtx);
+			break;
 		}
 		pthread_mutex_unlock(&jogadores[i].mtx);
-		break;
 	}
 	refresh = true;
 
@@ -128,6 +135,7 @@ void desenha_jogadores()
 			al_draw_bitmap(jogadores[i].bouncer,jogadores[i].x, jogadores[i].y, 0);
 			pthread_mutex_unlock(&jogadores[i].mtx);
 		}
+		else pthread_mutex_unlock(&jogadores[i].mtx);
 	}
 		//escolhe sprite adequado de bouncer
 /*		switch(jogadores[i].angulo)
@@ -255,14 +263,6 @@ void move_mira()
 
 		atualiza_jogador();//envia jogador com novo angulo para server
 
-/*		if(jogadores[num_jogadores-1].ammo > 0 && count_balas > 2)
-		{
-			adiciona_tiro(jogadores[num_jogadores-1].angulo, jogadores[num_jogadores-1].x+BOUNCER_SIZE/2, jogadores[num_jogadores-1].y+BOUNCER_SIZE/2, 0);
-			jogadores[num_jogadores-1].ammo --;
-			count_balas = 0;
-		}
-		else count_balas++;
-*/
 		refresh = true;
 
 	}

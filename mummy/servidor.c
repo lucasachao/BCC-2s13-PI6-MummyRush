@@ -11,8 +11,11 @@ int id_jog[6];
 pthread_t thr_clientes[6], thr_inimigos;
 
 /*THREADS*/
-void *gerencia_inimigos(void *arg);
+void *gerencia_inimigos()
+{
 
+	return NULL;
+}
 
 void *gerencia_clientes(void *arg)
 {
@@ -47,7 +50,8 @@ void *gerencia_clientes(void *arg)
 
 					case 2:
 					break;
-				}*/
+				}
+*/
 				//replica info para outros clientes
 				for(int i = 0; i < FD_SETSIZE; i++)
 					if(FD_ISSET(i, &conjunto))
@@ -217,7 +221,12 @@ int main()
 
 	prepara_structs();
 	prepara_clientes();
-	//prepara_inimigos();
+	prepara_inimigos_server(10);
+
+	if(pthread_create(&thr_inimigos, NULL, gerencia_inimigos, NULL) != 0)
+		printf("Erro ao tentar criar thread dos inimigos!\n");
+	else
+		printf("thread dos inimigos criada com sucesso!\n");
 
 	//encerra thread dos clientes
 	for(int i = 0; i < conectados; i++)
@@ -225,6 +234,8 @@ int main()
 			printf("Erro ao tentar juntar thread dos clientes!\n");
 		else
 			printf("thread do cliente %d encerrada com sucesso!\n", id_jog[i]);
+
+	finaliza_inimigos_server();
 
 	if(finaliza_server() == -1)
 		return EXIT_FAILURE;
