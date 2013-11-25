@@ -10,6 +10,7 @@ struct Tiro{
 	int angulo;
 	float x;
 	float y;
+	pthread_mutex_t mtx;
 };
 
 int velocidade_tiro;

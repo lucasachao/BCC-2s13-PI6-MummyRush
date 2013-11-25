@@ -86,6 +86,7 @@ void atualiza_jogadores(struct Buffer buffer)
 	//printf("recebeu %d\n", buffer.id);
 	for(int i = 0; i < num_jogadores; i++)
 	{
+		pthread_mutex_lock(&jogadores[i].mtx);
 		if(jogadores[i].id == buffer.id)
 		{
 			//printf("%d", jogadores[i].id);
@@ -95,7 +96,7 @@ void atualiza_jogadores(struct Buffer buffer)
 			jogadores[i].angulo = buffer.angulo;
 			//printf("atualizou!\n");
 		}
-		
+		pthread_mutex_unlock(&jogadores[i].mtx);
 		break;
 	}
 	refresh = true;
@@ -121,9 +122,13 @@ void desenha_jogadores()
 {
 	for(int i = 0; i < num_jogadores; i++)
 	{
+		pthread_mutex_lock(&jogadores[i].mtx);
 		if(jogadores[i].vida != 0)
+		{
 			al_draw_bitmap(jogadores[i].bouncer,jogadores[i].x, jogadores[i].y, 0);
-
+			pthread_mutex_unlock(&jogadores[i].mtx);
+		}
+	}
 		//escolhe sprite adequado de bouncer
 /*		switch(jogadores[i].angulo)
 		{
@@ -155,7 +160,7 @@ void desenha_jogadores()
 			break;
 		}
 */
-	}
+	
 }
 
 void move_personagem()

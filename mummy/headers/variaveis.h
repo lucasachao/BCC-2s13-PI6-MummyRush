@@ -10,6 +10,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
+#include <pthread.h>
 
 #include "cliente.h"
 

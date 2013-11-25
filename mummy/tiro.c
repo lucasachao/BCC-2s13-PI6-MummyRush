@@ -12,6 +12,8 @@ void adiciona_tiro(int angulo, float x, float y, int aux)
 {
 	//aux - 0 se o cliente atirou, 1 se foi info recebida do server de outros clientes
 	for(int i = 0; i < 300; i++)
+	{
+		pthread_mutex_lock(&tiro[i].mtx);
 		if(!tiro[i].ativa)
 		{
 			tiro[i].ativa = true;
@@ -30,13 +32,18 @@ void adiciona_tiro(int angulo, float x, float y, int aux)
 			if(aux == 0)
 				write(sock, &buffer, sizeof(struct Buffer));
 
+			pthread_mutex_unlock(&tiro[i].mtx);
 			break;
 		}
+		pthread_mutex_unlock(&tiro[i].mtx);
+	}
 }
 
 void move_tiro()
 {
 	for(int i = 0; i < 300; i++)
+	{
+		pthread_mutex_lock(&tiro[i].mtx);
 		if(tiro[i].ativa)
 		{
 			if(!verifica_colisao(tiro[i].x,tiro[i].y, 2, 0, 0))
@@ -84,11 +91,18 @@ void move_tiro()
 			}
 			refresh = true;
 		}
+		pthread_mutex_unlock(&tiro[i].mtx);
+	}
 }
 
 void desenha_tiro()
 {
 	for(int i = 0; i < 300; i++)
+	{
+		pthread_mutex_lock(&tiro[i].mtx);
 		if(tiro[i].ativa)
 			al_draw_filled_circle(tiro[i].x, tiro[i].y, 2, al_map_rgb(0,0,0));
+
+		pthread_mutex_unlock(&tiro[i].mtx);
+	}
 }

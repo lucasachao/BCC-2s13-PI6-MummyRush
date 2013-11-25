@@ -1,6 +1,5 @@
 #include "headers/jogo.h"
 #include "headers/menu.h"
-#include <pthread.h>
 
 void *recebe_info(void *arg)
 {
@@ -60,6 +59,13 @@ int main()
 	if(prepara_jogo() == -1)
 		finaliza_allegro();
 
+	//inicializa mutex
+	for(int i = 0; i < num_jogadores; i++)
+		pthread_mutex_init(&jogadores[i].mtx, NULL);
+	for(int i = 0; i < 300; i++)
+		pthread_mutex_init(&tiro[i].mtx, NULL);
+
+
 	//começou o jogo
 	doexit = false;
 	refresh = false;
@@ -107,6 +113,11 @@ int main()
 		printf("Erro ao tentar juntar thread do server!\n");
 	else
 		printf("thread do server encerrada com sucesso!\n");
+
+	for(int i = 0; i < num_jogadores; i++)
+		pthread_mutex_destroy(&jogadores[i].mtx);
+	for(int i = 0; i < 300; i++)
+		pthread_mutex_destroy(&tiro[i].mtx);
 
 	finaliza_rede();
 	finaliza_jogo();//destroi imagens

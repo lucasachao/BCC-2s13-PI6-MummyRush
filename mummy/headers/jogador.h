@@ -18,6 +18,7 @@ struct Jogador{
 	int arma;
 	int passo;
 	ALLEGRO_BITMAP *bouncer;
+	pthread_mutex_t mtx;
 };
 
 enum teclas_movimento {
