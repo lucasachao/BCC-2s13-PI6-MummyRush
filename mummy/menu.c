@@ -342,7 +342,7 @@ void update_main_menu(bool key[])
 
 int loop_menu()
 {
-	int pronto = 0, teste, start = 0;//cliente pronto, server pronto para ler, server pronto - 0 nao /9 sim
+	int pronto = 0, /*teste,*/ start = 0;//cliente pronto, server pronto para ler, server pronto - 0 nao /9 sim
 	bool key[3] = { true, false, false };
 
 	while(!doexit)
@@ -448,14 +448,14 @@ int loop_menu()
 
 	while(start == 0)
 	{
-		teste = select(FD_SETSIZE, &servidor, NULL, NULL, NULL);
-		if(teste == -1)
-			printf("Erro ao tentar selecionar socket!\n");
-		else if(teste > 0)
-		{
+//		teste = select(FD_SETSIZE, &servidor, NULL, NULL, NULL);
+//		if(teste == -1)
+//			printf("Erro ao tentar selecionar socket!\n");
+//		else if(teste > 0)
+//		{
 			read(sock, &start, 1);
 			printf("numero de jogadores: %d\n", start);
-		}
+//		}
 	}
 
 	desenha_menu();

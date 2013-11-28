@@ -10,14 +10,14 @@ void desenha_bg();
 int prepara_jogo()
 {
 	//prepara variaveis de players
-	if(prepara_jogadores() == -1)
+	if(prepara_jogadores_client() == -1)
 		return -1;
 
 	//prepara variaveis de bala
 	prepara_tiro();
 
 	//prepara variaveis de inimigos
-	prepara_inimigos_client(10);
+	prepara_inimigos_client(1);
 
 	//load de mapa
 	bg = al_load_bitmap("images/exemplo.jpg");

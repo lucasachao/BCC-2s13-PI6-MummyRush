@@ -21,14 +21,17 @@ void *recebe_info(void *arg)
 			switch(buffer.tipo)
 			{
 				case 0:
+//					printf("Movimento de jogador %d!\n", buffer.id);
 					atualiza_jogadores(buffer);
 				break;
 
 				case 1:
+//					printf("Adicao de tiro!\n");
 					adiciona_tiro(buffer.angulo, buffer.x, buffer.y, 1);
 				break;
 
 				case 2:
+//					printf("Movimento do inimigo %d!\n", buffer.id);
 					atualiza_inimigo_client(buffer);
 				break;
 			}
@@ -119,4 +122,6 @@ int main()
 	finaliza_jogo();//destroi imagens
 	finaliza_allegro();//finaliza componentes allegro
 	free(id_jogadores);
+	//matar thread
+
 }

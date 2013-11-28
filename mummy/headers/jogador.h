@@ -5,8 +5,6 @@
 #include "variaveis.h"
 #include "tiro.h"
 
-#define BOUNCER_SIZE 16
-
 struct Jogador{
 	int id;
 	int score;
@@ -35,7 +33,8 @@ bool movimento;
 bool pos[4];
 bool mir[4];
 
-int prepara_jogadores();
+int prepara_jogadores_client();
+int prepara_jogadores_server();
 void finaliza_jogadores();
 void atualiza_jogadores(struct Buffer buffer);//pega info do server
 void atualiza_jogador();//manda info pro server

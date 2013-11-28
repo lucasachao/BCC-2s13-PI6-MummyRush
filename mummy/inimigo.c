@@ -3,39 +3,61 @@
 #include "headers/inimigo.h"
 #include <time.h>
 
-int i1, i2;
 
-void prepara_inimigos_server(int qtd_inimigos)
+void prepara_inimigos_server(int qtd_inimigos, int qtd_jogadores, int id[])
 {
+//printf("comecou\n");
+	al_init();
+	al_init_image_addon();
+	tempo = al_create_timer(1.0 / FPS);
+	queue_inimigos = al_create_event_queue();
+	al_register_event_source(queue_inimigos, al_get_timer_event_source(tempo));
+	al_start_timer(tempo);
+
+//printf("passou allegro\n");
+	gera_matriz();
+//printf("passou matriz\n");
 	num_inimigos = qtd_inimigos;
-	t1 = clock();
 	inimigos = malloc(sizeof(struct Inimigo)*num_inimigos);
 	int gap = 16;
 	for(int i = 0; i < num_inimigos; i++)
 	{
 		inimigos[i].id = i;
 		inimigos[i].vida = 2;
-		inimigos[i].angulo = rand()%8;
-		inimigos[i].x = 30+gap*i;
+		inimigos[i].angulo = 2;
+		inimigos[i].x = 50+gap*i;
+		inimigos[i].dx = 0;
+		inimigos[i].dy = 0;
 		inimigos[i].y = 500;
 		inimigos[i].passo = 0;
 		inimigos[i].movimento = false;
 		pthread_mutex_init(&inimigos[i].mtx, NULL);
 	}
+//printf("passou inimigos\n");
+	jogadores_s = malloc(sizeof(struct Jogador_s)*qtd_jogadores);
+	for(int i = 0; i < qtd_jogadores; i++)
+	{
+		jogadores_s[i].id = id[i];
+		jogadores_s[i].vida = 3;
+		jogadores_s[i].x = 50;
+		jogadores_s[i].y = 150;
+		pthread_mutex_init(&jogadores_s[i].mtx, NULL);
+//printf("passou jogador %d\n", id[i]);
+	}
+//printf("passou jogadores\n");
 }
 
 void prepara_inimigos_client(int qtd_inimigos)
 {
 	num_inimigos = qtd_inimigos;
-	t1 = clock();
 	inimigos = malloc(sizeof(struct Inimigo)*num_inimigos);
 	int gap = 16;
 	for(int i = 0; i < num_inimigos; i++)
 	{
 		inimigos[i].id = i;
 		inimigos[i].vida = 2;
-		inimigos[i].angulo = rand()%8;
-		inimigos[i].x = 30+gap*i;
+		inimigos[i].angulo = 2;
+		inimigos[i].x = 50+gap*i;
 		inimigos[i].y = 500;
 		inimigos[i].passo = 0;
 		inimigos[i].movimento = false;
@@ -55,6 +77,11 @@ void finaliza_inimigos_server()
 		pthread_mutex_destroy(&inimigos[i].mtx);
 	}
 	free(inimigos);
+	al_unregister_event_source(queue_inimigos, al_get_timer_event_source(tempo));
+	al_destroy_timer(tempo);
+	al_shutdown_image_addon();
+	al_destroy_event_queue(queue_inimigos);
+
 }
 
 void finaliza_inimigos_client()
@@ -67,77 +94,99 @@ void finaliza_inimigos_client()
 	free(inimigos);
 }
 
-float getDist()
+float getDist(int i, int j)
 {
-	pthread_mutex_lock(&inimigos[i1].mtx);
-	pthread_mutex_lock(&jogadores[i2].mtx);
+	pthread_mutex_lock(&inimigos[i].mtx);
+	pthread_mutex_lock(&jogadores_s[j].mtx);
 
-	float dist = sqrtf(powf((inimigos[i1].x - jogadores[i2].x),2) + powf((inimigos[i1].y - jogadores[i2].y),2));
+	float dist = sqrtf(powf((inimigos[i].x - jogadores_s[j].x),2) + powf((inimigos[i].y - jogadores_s[j].y),2));
 
-	pthread_mutex_unlock(&inimigos[i1].mtx);
-	pthread_mutex_unlock(&jogadores[i2].mtx);
+	pthread_mutex_unlock(&inimigos[i].mtx);
+	pthread_mutex_unlock(&jogadores_s[j].mtx);
 	return dist;
 }
 
-void move_inimigos()
+void move_inimigos(int qtd_jogadores, int id_jog[])
 {
 	//Define o destino de cada mumia
-	for (i1 = 0; i1 < num_inimigos; i1++)
+	for (int i = 0; i < num_inimigos; i++)
 	{
-		int minIndice = -1;
-		for (i2 = 0; i2 < num_jogadores; i2++)
+		int minIndice = 0;
+		float minG = 1000000;
+		for (int j = 0; j < qtd_jogadores; j++)
 		{
-			float minG = 1000000;
-			float minAtual = getDist();
+			float minAtual = getDist(i, j);
 			if (minAtual < minG)
 			{
 				minG = minAtual;
-				minIndice = i2;
+				minIndice = j;
 			}
 		}
-		pthread_mutex_lock(&inimigos[i1].mtx);
-		pthread_mutex_lock(&jogadores[minIndice].mtx);
+//printf("passou getDist\n");
 
-		inimigos[i1].dx = jogadores[minIndice].x;
-		inimigos[i1].dy = jogadores[minIndice].y;
+		pthread_mutex_lock(&inimigos[i].mtx);
+		pthread_mutex_lock(&jogadores_s[minIndice].mtx);
 
-		pthread_mutex_unlock(&inimigos[i1].mtx);
-		pthread_mutex_unlock(&jogadores[minIndice].mtx);
+		inimigos[i].dx = jogadores_s[minIndice].x;
+		inimigos[i].dy = jogadores_s[minIndice].y;
+//printf("objetivo inimigo: x%f y%f\n", inimigos[i].dx, inimigos[i].dy);
+//printf("jogador perseguido: x%f y%f\n", jogadores_s[minIndice].x, jogadores_s[minIndice].y);
+
+		pthread_mutex_unlock(&inimigos[i].mtx);
+		pthread_mutex_unlock(&jogadores_s[minIndice].mtx);
 	}
-	int velocidade = 4;
-	
+	int velocidade = 1;
+
+//printf("passou mutex\n");
 	//Movimenta cada mumia 1 pixel na direcao definida
-	for (i1 = 0; i1 < num_inimigos; i1++)
+	for (int i = 0; i < num_inimigos; i++)
 	{
-		pthread_mutex_lock(&inimigos[i1].mtx);
+		pthread_mutex_lock(&inimigos[i].mtx);
 
-		if (inimigos[i1].x < inimigos[i1].dx && verifica_colisao(inimigos[i1].x,inimigos[i1].y, 16, 2, velocidade))
+		if (inimigos[i].x < inimigos[i].dx && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 3, velocidade))
 		{
-			inimigos[i1].x += velocidade;
-			inimigos[i1].movimento = true;
+			inimigos[i].x += velocidade;
+			inimigos[i].movimento = true;
 		}
-		else if (inimigos[i1].x > inimigos[i1].dx && verifica_colisao(inimigos[i1].x,inimigos[i1].y, 16, 6, velocidade))
+		else if (inimigos[i].x > inimigos[i].dx && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 2, velocidade))
 		{
-			inimigos[i1].x -= velocidade;
-			inimigos[i1].movimento = true;
+			inimigos[i].x -= velocidade;
+			inimigos[i].movimento = true;
 		}
-		if (inimigos[i1].y < inimigos[i1].dy && verifica_colisao(inimigos[i1].x,inimigos[i1].y, 16, 4, velocidade))
+		if (inimigos[i].y < inimigos[i].dy && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 1, velocidade))
 		{
-			inimigos[i1].y += velocidade;
-			inimigos[i1].movimento = true;
+			inimigos[i].y += velocidade;
+			inimigos[i].movimento = true;
 		}
-		else if (inimigos[i1].y > inimigos[i1].dy && verifica_colisao(inimigos[i1].x,inimigos[i1].y, 16, 0, velocidade))
+		else if (inimigos[i].y > inimigos[i].dy && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 0, velocidade))
 		{
-			inimigos[i1].y -= velocidade;
-			inimigos[i1].movimento = true;
+			inimigos[i].y -= velocidade;
+			inimigos[i].movimento = true;
 		}
-		pthread_mutex_unlock(&inimigos[i1].mtx);
 
-		if(inimigos[i1].movimento == true)
+		if(inimigos[i].movimento == true)
 		{
-			atualiza_inimigo_server(i1);
-			inimigos[i1].movimento = false;
+			//envia inimigo para clientes
+			//printf("inimigo se moveu!\n");
+
+			//coloca info do inimigo que se mexeu no buffer
+			struct Buffer buffer;
+			buffer.tipo = 2;
+			buffer.id = i;
+			buffer.x = inimigos[i].x;
+			buffer.y = inimigos[i].y;
+			buffer.angulo = 2;//arrumar!!
+			buffer.vida = inimigos[i].vida;
+
+			//envia info do inimigo que se mexeu para os clients		
+			for(int j = 0; j < qtd_jogadores; j++)	
+				write(id_jog[j], &buffer, sizeof(struct Buffer));
+	
+			//printf("info enviada!!\n");
+			inimigos[i].movimento = false;
 		}
+		pthread_mutex_unlock(&inimigos[i].mtx);
+
 	}
 }
 
@@ -154,50 +203,17 @@ void desenha_inimigos()
 	}
 }
 
-void* atualiza_inimigos_tempo()
-{
-	while (true)
-		if ( ((clock() - t1 / CLOCKS_PER_SEC)*1000*1000) >= 1.0/FPS)
-		{
-			t1 = clock();
-			move_inimigos();
-		}
-}
-
-//envia informacoes para clientes
-void atualiza_inimigo_server(int id_inimigo)
-{
-	pthread_mutex_lock(&inimigos[id_inimigo].mtx);
-
-	//coloca info do inimigo que se mexeu no buffer
-	struct Buffer buffer;
-	buffer.tipo = 2;
-	buffer.x = inimigos[id_inimigo].x;
-	buffer.y = inimigos[id_inimigo].y;
-	buffer.angulo = 2;//arrumar!!
-	buffer.vida = inimigos[id_inimigo].vida;
-
-	//envia info do inimigo que se mexeu para os clients		
-		write(sock, &buffer, sizeof(struct Buffer));
-	
-	pthread_mutex_unlock(&inimigos[id_inimigo].mtx);
-}
-
+//recebe info do inimigo do server e atualiza array para desenhar
 void atualiza_inimigo_client(struct Buffer buffer)
 {
-	for(int i = 0; i < num_inimigos; i++)
-	{
-		pthread_mutex_lock(&inimigos[i].mtx);
-		if(inimigos[i].id == buffer.id)
-		{
-			inimigos[i].x = buffer.x;
-			inimigos[i].y = buffer.y;
-			inimigos[i].angulo = buffer.angulo;
-			inimigos[i].vida = buffer.vida;
-			pthread_mutex_unlock(&inimigos[i].mtx);
-			break;
-		}
-		pthread_mutex_unlock(&inimigos[i].mtx);
-	}
+	pthread_mutex_lock(&inimigos[buffer.id].mtx);
+
+	inimigos[buffer.id].x = buffer.x;
+	inimigos[buffer.id].y = buffer.y;
+	inimigos[buffer.id].angulo = buffer.angulo;
+	inimigos[buffer.id].vida = buffer.vida;
+
+	pthread_mutex_unlock(&inimigos[buffer.id].mtx);
+
 }
 #endif

@@ -3,7 +3,6 @@
 
 #include "colisao.h"
 #include "variaveis.h"
-#include "cliente.h"
 
 struct Tiro{
 	bool ativa;

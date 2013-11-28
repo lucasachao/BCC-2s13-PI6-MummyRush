@@ -12,8 +12,6 @@
 #include "inimigo.h"
 
 #define PORT 10500
-
 #define TAM_FILA 6
-
 
 #endif

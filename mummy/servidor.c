@@ -9,10 +9,23 @@ struct hostent *host;
 char *server;
 int id_jog[6];
 pthread_t thr_clientes[6], thr_inimigos;
+clock_t t1;
 
 /*THREADS*/
-void *gerencia_inimigos()
+void *gerencia_inimigos(void *arg)
 {
+	int* jogando = arg;
+	//printf("%d jogando\n", jogando[0]);
+	while(jogando[0] != 0)
+	{
+		ALLEGRO_EVENT ev;
+		al_wait_for_event(queue_inimigos, &ev);
+
+		if(ev.type == ALLEGRO_EVENT_TIMER)
+		{
+			move_inimigos(conectados, id_jog);
+		}
+	}
 
 	return NULL;
 }
@@ -35,23 +48,37 @@ void *gerencia_clientes(void *arg)
 				FD_CLR(id_cliente,&conjunto);	  
 				printf("socket %d desconectado!\n",id_cliente);
 				rodando = 0;
+				conectados --;
 			}
 			else
 			{
-				//printf("Recebeu %d de socket %d\n", id_cliente, buffer1.tipo);	
+				//printf("Recebeu %d de socket %d\n", buffer1.tipo, id_cliente);	
 				//coloca info recebida nos arrays
-/*				switch(buffer.tipo)
+				switch(buffer1.tipo)
 				{
-					case 0:
+					case 0://atualizacao de personagem
+					for(int i = 0; i < conectados; i++)
+						if(jogadores_s[i].id == id_cliente)
+						{
+							pthread_mutex_lock(&jogadores_s[0].mtx);
+							jogadores_s[i].x = buffer1.x;
+							jogadores_s[i].y = buffer1.y;
+							jogadores_s[i].vida = buffer1.vida;
+							jogadores_s[i].angulo = buffer1.angulo;
+							pthread_mutex_unlock(&jogadores_s[0].mtx);
+//printf("jogador atualizado: x%f y%f\n", jogadores_s[i].x, jogadores_s[i].y);
+//printf("atualizou pos de %d\n", id_cliente);
+							break;
+						}
 					break;
 
-					case 1:
+					case 1://atualizacao de tiro
 					break;
 
-					case 2:
+					case 2://atualizacao de inimigo
 					break;
 				}
-*/
+
 				//replica info para outros clientes
 				for(int i = 0; i < FD_SETSIZE; i++)
 					if(FD_ISSET(i, &conjunto))
@@ -66,11 +93,6 @@ void *gerencia_clientes(void *arg)
 
 
 /*PREPARA E FINALIZA*/
-void prepara_structs()
-{
-
-}
-
 int prepara_rede()
 {
 	conectados = 0;
@@ -219,11 +241,10 @@ int main()
 	if(prepara_rede() == -1)
 		exit(EXIT_FAILURE);
 
-	prepara_structs();
 	prepara_clientes();
-	prepara_inimigos_server(10);
-
-	if(pthread_create(&thr_inimigos, NULL, gerencia_inimigos, NULL) != 0)
+	prepara_inimigos_server(1, conectados, id_jog);
+	
+	if(pthread_create(&thr_inimigos, NULL, gerencia_inimigos, &conectados) != 0)
 		printf("Erro ao tentar criar thread dos inimigos!\n");
 	else
 		printf("thread dos inimigos criada com sucesso!\n");
@@ -235,7 +256,16 @@ int main()
 		else
 			printf("thread do cliente %d encerrada com sucesso!\n", id_jog[i]);
 
-	finaliza_inimigos_server();
+	//encerra thread dos inimigos
+	if(pthread_join(thr_inimigos, NULL) != 0)
+		printf("Erro ao tentar juntar thread dos inimigos!\n");
+	else
+	{
+		printf("thread dos inimigos encerrada com sucesso!\n");
+		finaliza_inimigos_server();
+	}
+
+
 
 	if(finaliza_server() == -1)
 		return EXIT_FAILURE;

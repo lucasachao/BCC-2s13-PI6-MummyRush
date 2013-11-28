@@ -2,7 +2,7 @@
 
 int velocidade;
 
-int prepara_jogadores()
+int prepara_jogadores_client()
 {
 	for(int i = 0; i < 4; i++)
 	{
