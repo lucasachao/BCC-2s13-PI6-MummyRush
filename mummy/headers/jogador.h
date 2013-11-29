@@ -28,6 +28,7 @@ struct Jogador jogadores[6];
 int num_jogadores, id_jogador;
 int *id_jogadores;
 bool movimento;
+ALLEGRO_BITMAP *im_jog;
 
 //teclas de mira e de movimento
 bool pos[4];

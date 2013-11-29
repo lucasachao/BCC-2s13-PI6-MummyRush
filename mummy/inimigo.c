@@ -18,12 +18,13 @@ void prepara_inimigos_server(int qtd_inimigos, int qtd_jogadores, int id[])
 	gera_matriz();
 //printf("passou matriz\n");
 	num_inimigos = qtd_inimigos;
+	num_inimigos_vivos = num_inimigos;
 	inimigos = malloc(sizeof(struct Inimigo)*num_inimigos);
-	int gap = 16;
+	int gap = 40;
 	for(int i = 0; i < num_inimigos; i++)
 	{
 		inimigos[i].id = i;
-		inimigos[i].vida = 2;
+		inimigos[i].vida = 1;
 		inimigos[i].angulo = 2;
 		inimigos[i].x = 50+gap*i;
 		inimigos[i].dx = 0;
@@ -38,7 +39,7 @@ void prepara_inimigos_server(int qtd_inimigos, int qtd_jogadores, int id[])
 	for(int i = 0; i < qtd_jogadores; i++)
 	{
 		jogadores_s[i].id = id[i];
-		jogadores_s[i].vida = 3;
+		jogadores_s[i].vida = 10;
 		jogadores_s[i].x = 50;
 		jogadores_s[i].y = 150;
 		pthread_mutex_init(&jogadores_s[i].mtx, NULL);
@@ -49,25 +50,28 @@ void prepara_inimigos_server(int qtd_inimigos, int qtd_jogadores, int id[])
 
 void prepara_inimigos_client(int qtd_inimigos)
 {
+	im_ini = al_load_bitmap("images/inimigos.png");
+
 	num_inimigos = qtd_inimigos;
+	num_inimigos_vivos = num_inimigos;
 	inimigos = malloc(sizeof(struct Inimigo)*num_inimigos);
-	int gap = 16;
+	int gap = 40;
 	for(int i = 0; i < num_inimigos; i++)
 	{
 		inimigos[i].id = i;
-		inimigos[i].vida = 2;
+		inimigos[i].vida = 1;
 		inimigos[i].angulo = 2;
 		inimigos[i].x = 50+gap*i;
 		inimigos[i].y = 500;
 		inimigos[i].passo = 0;
 		inimigos[i].movimento = false;
 		pthread_mutex_init(&inimigos[i].mtx, NULL);
+		inimigos[i].bouncer = NULL;
 
-		inimigos[i].bouncer = al_create_bitmap(BOUNCER_SIZE, BOUNCER_SIZE);
-		al_set_target_bitmap(inimigos[i].bouncer);
-		al_clear_to_color(al_map_rgb(250, 250, 250));
-		al_set_target_bitmap(al_get_backbuffer(display));
+		inimigos[i].bouncer = al_create_sub_bitmap(im_ini, 1*BOUNCER_SIZE, 0, BOUNCER_SIZE, BOUNCER_SIZE);
+//printf("passou load inimigo \n");
 	}
+//printf("passou prepara_inimigo \n");
 }
 
 void finaliza_inimigos_server()
@@ -92,6 +96,20 @@ void finaliza_inimigos_client()
 		pthread_mutex_destroy(&inimigos[i].mtx);
 	}
 	free(inimigos);
+	al_destroy_bitmap(im_ini);
+}
+
+bool verifica_colisao_inimigos(int id)
+{
+	bool verifica = true;
+	for(int i = 0; i < num_inimigos; i++)
+		if(i != id)
+			if((inimigos[id].x >= inimigos[i].x && inimigos[id].x <= inimigos[i].x + BOUNCER_SIZE) || (inimigos[id].x + BOUNCER_SIZE >= inimigos[i].x && inimigos[id].x + BOUNCER_SIZE <= inimigos[i].x + BOUNCER_SIZE))
+				if((inimigos[id].y >= inimigos[i].y && inimigos[id].y <= inimigos[i].y + BOUNCER_SIZE) || (inimigos[id].y + BOUNCER_SIZE >= inimigos[i].y && inimigos[id].y + BOUNCER_SIZE <= inimigos[i].y + BOUNCER_SIZE))
+					verifica = false;
+
+//printf("%s", verifica ? "true" : "false");
+	return verifica;
 }
 
 float getDist(int i, int j)
@@ -103,6 +121,7 @@ float getDist(int i, int j)
 
 	pthread_mutex_unlock(&inimigos[i].mtx);
 	pthread_mutex_unlock(&jogadores_s[j].mtx);
+
 	return dist;
 }
 
@@ -142,29 +161,45 @@ void move_inimigos(int qtd_jogadores, int id_jog[])
 	for (int i = 0; i < num_inimigos; i++)
 	{
 		pthread_mutex_lock(&inimigos[i].mtx);
-
-		if (inimigos[i].x < inimigos[i].dx && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 3, velocidade))
+		//direita
+		if (inimigos[i].x < inimigos[i].dx && verifica_colisao(inimigos[i].x,inimigos[i].y, BOUNCER_SIZE, 3, velocidade))
 		{
 			inimigos[i].x += velocidade;
-			inimigos[i].movimento = true;
+			//verifica se inimigo colidiu com outro inimigo
+			if(verifica_colisao_inimigos(i))
+				inimigos[i].movimento = true;
+			else
+				inimigos[i].x -= velocidade;
 		}
-		else if (inimigos[i].x > inimigos[i].dx && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 2, velocidade))
+		//esquerda
+		else if (inimigos[i].x > inimigos[i].dx && verifica_colisao(inimigos[i].x,inimigos[i].y, BOUNCER_SIZE, 2, velocidade))
 		{
 			inimigos[i].x -= velocidade;
-			inimigos[i].movimento = true;
+			if(verifica_colisao_inimigos(i))
+				inimigos[i].movimento = true;
+			else
+				inimigos[i].x += velocidade;
 		}
-		if (inimigos[i].y < inimigos[i].dy && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 1, velocidade))
+		//baixo
+		if (inimigos[i].y < inimigos[i].dy && verifica_colisao(inimigos[i].x,inimigos[i].y, BOUNCER_SIZE, 1, velocidade))
 		{
 			inimigos[i].y += velocidade;
-			inimigos[i].movimento = true;
+			if(verifica_colisao_inimigos(i))
+				inimigos[i].movimento = true;
+			else
+				inimigos[i].y -= velocidade;
 		}
-		else if (inimigos[i].y > inimigos[i].dy && verifica_colisao(inimigos[i].x,inimigos[i].y, 16, 0, velocidade))
+		//cima
+		else if (inimigos[i].y > inimigos[i].dy && verifica_colisao(inimigos[i].x,inimigos[i].y, BOUNCER_SIZE, 0, velocidade))
 		{
 			inimigos[i].y -= velocidade;
-			inimigos[i].movimento = true;
+			if(verifica_colisao_inimigos(i))
+				inimigos[i].movimento = true;
+			else
+				inimigos[i].y += velocidade;
 		}
 
-		if(inimigos[i].movimento == true)
+		if(inimigos[i].movimento == true && inimigos[i].vida != 0)
 		{
 			//envia inimigo para clientes
 			//printf("inimigo se moveu!\n");
@@ -178,8 +213,8 @@ void move_inimigos(int qtd_jogadores, int id_jog[])
 			buffer.angulo = 2;//arrumar!!
 			buffer.vida = inimigos[i].vida;
 
-			//envia info do inimigo que se mexeu para os clients		
-			for(int j = 0; j < qtd_jogadores; j++)	
+			//envia info do inimigo que se mexeu para os clients
+			for(int j = 0; j < qtd_jogadores; j++)
 				write(id_jog[j], &buffer, sizeof(struct Buffer));
 	
 			//printf("info enviada!!\n");
@@ -215,5 +250,14 @@ void atualiza_inimigo_client(struct Buffer buffer)
 
 	pthread_mutex_unlock(&inimigos[buffer.id].mtx);
 
+}
+
+bool verifica_fim()
+{
+	for(int i = 0; i < num_inimigos; i++)
+		if(inimigos[i].vida > 0)
+			return true;
+
+	return false;
 }
 #endif

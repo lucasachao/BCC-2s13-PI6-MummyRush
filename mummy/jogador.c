@@ -4,6 +4,7 @@ int velocidade;
 
 int prepara_jogadores_client()
 {
+	im_jog = al_load_bitmap("images/super_shade.png");
 	for(int i = 0; i < 4; i++)
 	{
 		pos[i] = false;
@@ -32,20 +33,14 @@ int prepara_jogadores_client()
 	//jogador do cliente
 	jogadores[num_jogadores - 1].id = id_jogador;
 	jogadores[num_jogadores - 1].score = 0;
-	jogadores[num_jogadores - 1].vida = 3;
+	jogadores[num_jogadores - 1].vida = 10;
 	jogadores[num_jogadores - 1].angulo = 2;
-	jogadores[num_jogadores - 1].x = 50;
+	jogadores[num_jogadores - 1].x = 50*id_jogador;
 	jogadores[num_jogadores - 1].y = 150;
 	jogadores[num_jogadores - 1].ammo = 100;
 	jogadores[num_jogadores - 1].passo = 0;
-	jogadores[num_jogadores - 1].bouncer = al_create_bitmap(BOUNCER_SIZE, BOUNCER_SIZE);
-	if(!jogadores[num_jogadores - 1].bouncer)
-	{
-		fprintf(stderr, "failed to create bouncer bitmap!\n");
-		return -1;
-	}
-	al_set_target_bitmap(jogadores[num_jogadores - 1].bouncer);
-	al_clear_to_color(al_map_rgb(0, 0, 0));
+	jogadores[num_jogadores - 1].bouncer = al_create_sub_bitmap(im_jog, 0, 0, BOUNCER_SIZE, BOUNCER_SIZE);
+
 	al_set_target_bitmap(al_get_backbuffer(display));
 
 	//outros jogadores
@@ -53,21 +48,13 @@ int prepara_jogadores_client()
 	{
 		jogadores[i].id = id_jogadores[i];
 		jogadores[i].score = 0;
-		jogadores[i].vida = 3;
+		jogadores[i].vida = 10;
 		jogadores[i].angulo = 2;
 		jogadores[i].x = 50 + gap*(i+1);
 		jogadores[i].y = 150;
 		jogadores[i].ammo = 100;
 		jogadores[i].passo = 0;
-		jogadores[i].bouncer = al_create_bitmap(BOUNCER_SIZE, BOUNCER_SIZE);
-		if(!jogadores[i].bouncer)
-		{
-			fprintf(stderr, "failed to create bouncer bitmap!\n");
-			return -1;
-		}
-		al_set_target_bitmap(jogadores[i].bouncer);
-		al_clear_to_color(al_map_rgb(0, 0, 0));
-		al_set_target_bitmap(al_get_backbuffer(display));
+		jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 0, BOUNCER_SIZE, BOUNCER_SIZE);
 
 	}
 	//count_balas = 0;
@@ -84,6 +71,7 @@ void finaliza_jogadores()
 		al_destroy_bitmap(jogadores[i].bouncer);
 		pthread_mutex_destroy(&jogadores[i].mtx);
 	}
+	al_destroy_bitmap(im_jog);
 }
 
 void atualiza_jogadores(struct Buffer buffer)
@@ -132,42 +120,47 @@ void desenha_jogadores()
 		pthread_mutex_lock(&jogadores[i].mtx);
 		if(jogadores[i].vida != 0)
 		{
+			al_destroy_bitmap(jogadores[i].bouncer);
+			//escolhe sprite adequado de bouncer
+			switch(jogadores[i].angulo)
+			{
+				case 0:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 3*BOUNCER_SIZE, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 1:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 3*BOUNCER_SIZE, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 2:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 2*BOUNCER_SIZE, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 3:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 0, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 4:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 0, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 5:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 0, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 6:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 1*BOUNCER_SIZE, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+
+				case 7:
+				jogadores[i].bouncer = al_create_sub_bitmap(im_jog, 0, 3*BOUNCER_SIZE, BOUNCER_SIZE, BOUNCER_SIZE);
+				break;
+			}
 			al_draw_bitmap(jogadores[i].bouncer,jogadores[i].x, jogadores[i].y, 0);
 			pthread_mutex_unlock(&jogadores[i].mtx);
 		}
 		else pthread_mutex_unlock(&jogadores[i].mtx);
 	}
-		//escolhe sprite adequado de bouncer
-/*		switch(jogadores[i].angulo)
-		{
-			case 0:
-			break;
-
-			case 1:
-			break;
-
-			case 2:
-			break;
-
-			case 3:
-			break;
-
-			case 4:
-			break;
-
-			case 5:
-			break;
-
-			case 6:
-			break;
-
-			case 7:
-			break;
-
-			case 8:
-			break;
-		}
-*/
 	
 }
 

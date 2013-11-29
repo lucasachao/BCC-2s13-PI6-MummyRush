@@ -15,6 +15,7 @@ clock_t t1;
 void *gerencia_inimigos(void *arg)
 {
 	int* jogando = arg;
+	sleep(2);
 	//printf("%d jogando\n", jogando[0]);
 	while(jogando[0] != 0)
 	{
@@ -60,12 +61,12 @@ void *gerencia_clientes(void *arg)
 					for(int i = 0; i < conectados; i++)
 						if(jogadores_s[i].id == id_cliente)
 						{
-							pthread_mutex_lock(&jogadores_s[0].mtx);
+							pthread_mutex_lock(&jogadores_s[i].mtx);
 							jogadores_s[i].x = buffer1.x;
 							jogadores_s[i].y = buffer1.y;
 							jogadores_s[i].vida = buffer1.vida;
 							jogadores_s[i].angulo = buffer1.angulo;
-							pthread_mutex_unlock(&jogadores_s[0].mtx);
+							pthread_mutex_unlock(&jogadores_s[i].mtx);
 //printf("jogador atualizado: x%f y%f\n", jogadores_s[i].x, jogadores_s[i].y);
 //printf("atualizou pos de %d\n", id_cliente);
 							break;
@@ -76,6 +77,11 @@ void *gerencia_clientes(void *arg)
 					break;
 
 					case 2://atualizacao de inimigo
+					pthread_mutex_lock(&inimigos[buffer1.id].mtx);
+
+					inimigos[buffer1.id].vida = buffer1.vida;
+
+					pthread_mutex_unlock(&inimigos[buffer1.id].mtx);
 					break;
 				}
 
@@ -242,7 +248,7 @@ int main()
 		exit(EXIT_FAILURE);
 
 	prepara_clientes();
-	prepara_inimigos_server(1, conectados, id_jog);
+	prepara_inimigos_server(5, conectados, id_jog);
 	
 	if(pthread_create(&thr_inimigos, NULL, gerencia_inimigos, &conectados) != 0)
 		printf("Erro ao tentar criar thread dos inimigos!\n");

@@ -461,7 +461,7 @@ int loop_menu()
 	desenha_menu();
 	al_draw_text(font, al_map_rgb(0,0,0), (SCREEN_W/2),200 ,ALLEGRO_ALIGN_CENTRE, "Boa sorte!");
 	al_flip_display();
-	al_rest(3);
+	al_rest(1);
 	
 	finaliza_menu();
 	return start;

@@ -19,7 +19,9 @@ struct Inimigo{
 };
 
 int num_inimigos;
+int num_inimigos_vivos;
 struct Inimigo *inimigos;
+ALLEGRO_BITMAP *im_ini;
 
 //para servidor
 struct Jogador_s{

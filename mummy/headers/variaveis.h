@@ -17,7 +17,7 @@
 #define SCREEN_W 1024
 #define SCREEN_H 768
 #define FPS 60.0
-#define BOUNCER_SIZE 16
+#define BOUNCER_SIZE 32
 
 bool doexit;
 bool refresh;

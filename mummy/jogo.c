@@ -17,7 +17,7 @@ int prepara_jogo()
 	prepara_tiro();
 
 	//prepara variaveis de inimigos
-	prepara_inimigos_client(1);
+	prepara_inimigos_client(5);
 
 	//load de mapa
 	bg = al_load_bitmap("images/exemplo.jpg");
@@ -46,11 +46,58 @@ void finaliza_jogo()
 	finaliza_inimigos_client();
 }
 
+void verifica_colisao_tiro()
+{
+	for(int i = 0; i < 300; i++)
+	{
+		if(tiro[i].ativa)
+		{
+			for(int j = 0; j < num_inimigos; j++)
+				if(tiro[i].x >= inimigos[j].x && tiro[i].x <= inimigos[j].x + BOUNCER_SIZE)
+					if(tiro[i].y >= inimigos[j].y && tiro[i].y <= inimigos[j].y + BOUNCER_SIZE)
+					{
+						inimigos[j].vida --;
+						struct Buffer b;
+						b.tipo = 2;
+						b.id = j;
+						b.vida = inimigos[j].vida;
+						write(sock, &b, sizeof(struct Buffer));
+						tiro[i].ativa = false;
+					}
+		}
+	}
+}
+
+void verifica_colisao_jogador()
+{
+	int id = 0;
+	//pega index do jogador no vetor
+	for(int i = 0; i < num_jogadores; i++)
+		if(jogadores[i].id == id_jogador)
+			id = i;
+
+	for(int i = 0; i < num_inimigos; i++)
+		if((inimigos[i].x >= jogadores[id].x && inimigos[i].x <= jogadores[id].x + BOUNCER_SIZE) || (inimigos[i].x + BOUNCER_SIZE >= jogadores[id].x && inimigos[i].x + BOUNCER_SIZE <= jogadores[id].x + BOUNCER_SIZE))
+				if((inimigos[i].y >= jogadores[id].y && inimigos[i].y <= jogadores[id].y + BOUNCER_SIZE) || (inimigos[i].y + BOUNCER_SIZE >= jogadores[id].y && inimigos[i].y + BOUNCER_SIZE <= jogadores[id].y + BOUNCER_SIZE))
+					jogadores[id].vida --;
+}
+
+void verifica_inimigos_vivos()
+{
+	num_inimigos_vivos = 0;
+	for(int i = 0; i < num_inimigos; i++)
+		if(inimigos[i].vida > 0)
+			num_inimigos_vivos++;
+}
+
 void atualiza()
 {
 	move_personagem();
 	move_tiro();
 	move_mira();
+	verifica_colisao_tiro();
+	verifica_colisao_jogador();
+	verifica_inimigos_vivos();
 }
 
 void desenha_bg()
@@ -67,7 +114,7 @@ void desenha_bg()
 	al_draw_textf(text, al_map_rgb(0,0,0), 200, 8,ALLEGRO_ALIGN_CENTRE, "%d",jogadores[num_jogadores-1].vida);
 
 	al_draw_text(text, al_map_rgb(0,0,0), 410, 8,ALLEGRO_ALIGN_CENTRE, "inimigos:");
-//	al_draw_textf(text, al_map_rgb(0,0,0), 200, 8,ALLEGRO_ALIGN_CENTRE, "%d",num_inimigos);
+	al_draw_textf(text, al_map_rgb(0,0,0), 500, 8,ALLEGRO_ALIGN_CENTRE, "%d",num_inimigos_vivos);
 
 	al_draw_text(text, al_map_rgb(0,0,0), 760, 8,ALLEGRO_ALIGN_CENTRE, "ammo:");
 	al_draw_textf(text, al_map_rgb(0,0,0), 850, 8,ALLEGRO_ALIGN_CENTRE, "%d",jogadores[num_jogadores-1].ammo);
