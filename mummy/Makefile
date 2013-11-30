@@ -30,8 +30,8 @@ tiro.o: tiro.c
 variaveis.o: variaveis.c
 	gcc $(FLAGS) -c variaveis.c -o variaveis.o
 
-client: cliente.o colisao.o jogo.o jogador.o menu.o teclado.o tiro.o variaveis.o mummy.c 
-	gcc $(FLAGS) cliente.o colisao.o jogo.o jogador.o menu.o teclado.o tiro.o variaveis.o mummy.c -o client $(ALLEGRO) -lm -lpthread
+client: cliente.o colisao.o inimigo.o jogo.o jogador.o menu.o teclado.o tiro.o variaveis.o mummy.c 
+	gcc $(FLAGS) cliente.o colisao.o inimigo.o jogo.o jogador.o menu.o teclado.o tiro.o variaveis.o mummy.c -o client $(ALLEGRO) -lm -lpthread
 
 server: colisao.o inimigo.o servidor.c
 	gcc $(FLAGS) colisao.o inimigo.o servidor.c -o server $(ALLEGRO) -lm -lpthread
@@ -40,7 +40,9 @@ clean:
 	rm -f server client cliente.o colisao.o inimigo.o jogo.o jogador.o menu.o teclado.o tiro.o variaveis.o 
 
 install:
-	
+	sudo cp client /usr/bin
+	sudo cp server /usr/bin
 
 uninstall:
-
+	sudo rm -rf /usr/bin/client
+	sudo rm -rf /usr/bin/server

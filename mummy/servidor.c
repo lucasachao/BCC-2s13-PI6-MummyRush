@@ -1,7 +1,7 @@
 #include "headers/servidor.h"
 
 struct Buffer buffer;
-int sock, novo_sock, conectados, prontos, ok;
+int sock, novo_sock, conectados, prontos, ok, aux;
 socklen_t tamanho;
 fd_set conjunto, novo_conjunto;
 struct sockaddr_in endereco, novo_endereco;
@@ -15,7 +15,7 @@ clock_t t1;
 void *gerencia_inimigos(void *arg)
 {
 	int* jogando = arg;
-	sleep(2);
+	//sleep(2);
 	//printf("%d jogando\n", jogando[0]);
 	while(jogando[0] != 0)
 	{
@@ -25,6 +25,31 @@ void *gerencia_inimigos(void *arg)
 		if(ev.type == ALLEGRO_EVENT_TIMER)
 		{
 			move_inimigos(conectados, id_jog);
+		}
+		//acabaram os inimigos, inicia novo round
+		verifica_inimigos_vivos();
+		if(num_inimigos_vivos == 0)
+		{
+			finaliza_inimigos_server();
+			if(aux == 3)
+			{
+				struct Buffer buffer1;
+				buffer1.tipo = 9;
+				for(int i = 0; i < FD_SETSIZE; i++)
+					if(FD_ISSET(i, &conjunto))
+						if(i != sock)
+							write(i, &buffer1, sizeof(struct Buffer));
+				break;
+			}
+			struct Buffer buffer1;
+			buffer1.tipo = 6;
+			for(int i = 0; i < FD_SETSIZE; i++)
+				if(FD_ISSET(i, &conjunto))
+					if(i != sock)
+						write(i, &buffer1, sizeof(struct Buffer));
+			novo_round(5*aux);
+			aux ++;
+
 		}
 	}
 
@@ -246,7 +271,7 @@ int main()
 {
 	if(prepara_rede() == -1)
 		exit(EXIT_FAILURE);
-
+	aux = 2;
 	prepara_clientes();
 	prepara_inimigos_server(5, conectados, id_jog);
 	
@@ -268,10 +293,13 @@ int main()
 	else
 	{
 		printf("thread dos inimigos encerrada com sucesso!\n");
-		finaliza_inimigos_server();
+		//finaliza_inimigos_server();
 	}
 
-
+	al_unregister_event_source(queue_inimigos, al_get_timer_event_source(tempo));
+	al_destroy_timer(tempo);
+	al_shutdown_image_addon();
+	al_destroy_event_queue(queue_inimigos);
 
 	if(finaliza_server() == -1)
 		return EXIT_FAILURE;

@@ -36,6 +36,7 @@ struct Jogador_s *jogadores_s;
 ALLEGRO_EVENT_QUEUE *queue_inimigos;
 ALLEGRO_TIMER *tempo;
 
+void novo_round(int qtd_inimigos);
 void prepara_inimigos_server(int qtd_inimigos, int qtd_jogadores, int *id);
 void prepara_inimigos_client(int qtd_inimigos);
 void finaliza_inimigos_server();
@@ -43,5 +44,6 @@ void finaliza_inimigos_client();
 void move_inimigos(int qtd_jogadores, int id_jog[]);
 void desenha_inimigos();
 void atualiza_inimigo_client(struct Buffer buffer);
+void verifica_inimigos_vivos();
 
 #endif

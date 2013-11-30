@@ -11,5 +11,6 @@ int prepara_jogo();
 void atualiza();
 void desenha();
 void finaliza_jogo();
+void desenha_fim();
 
 #endif

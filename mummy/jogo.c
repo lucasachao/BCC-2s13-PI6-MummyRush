@@ -50,21 +50,28 @@ void verifica_colisao_tiro()
 {
 	for(int i = 0; i < 300; i++)
 	{
+		pthread_mutex_lock(&tiro[i].mtx);
 		if(tiro[i].ativa)
 		{
 			for(int j = 0; j < num_inimigos; j++)
-				if(tiro[i].x >= inimigos[j].x && tiro[i].x <= inimigos[j].x + BOUNCER_SIZE)
-					if(tiro[i].y >= inimigos[j].y && tiro[i].y <= inimigos[j].y + BOUNCER_SIZE)
-					{
-						inimigos[j].vida --;
-						struct Buffer b;
-						b.tipo = 2;
-						b.id = j;
-						b.vida = inimigos[j].vida;
-						write(sock, &b, sizeof(struct Buffer));
-						tiro[i].ativa = false;
-					}
+			{
+				pthread_mutex_lock(&inimigos[j].mtx);
+				if(inimigos[j].vida > 0)
+					if(tiro[i].x >= inimigos[j].x && tiro[i].x <= inimigos[j].x + BOUNCER_SIZE)
+						if(tiro[i].y >= inimigos[j].y && tiro[i].y <= inimigos[j].y + BOUNCER_SIZE)
+						{
+							inimigos[j].vida --;
+							struct Buffer b;
+							b.tipo = 2;
+							b.id = j;
+							b.vida = inimigos[j].vida;
+							write(sock, &b, sizeof(struct Buffer));
+							tiro[i].ativa = false;
+						}
+				pthread_mutex_unlock(&inimigos[j].mtx);
+			}
 		}
+		pthread_mutex_unlock(&tiro[i].mtx);
 	}
 }
 
@@ -77,17 +84,14 @@ void verifica_colisao_jogador()
 			id = i;
 
 	for(int i = 0; i < num_inimigos; i++)
-		if((inimigos[i].x >= jogadores[id].x && inimigos[i].x <= jogadores[id].x + BOUNCER_SIZE) || (inimigos[i].x + BOUNCER_SIZE >= jogadores[id].x && inimigos[i].x + BOUNCER_SIZE <= jogadores[id].x + BOUNCER_SIZE))
-				if((inimigos[i].y >= jogadores[id].y && inimigos[i].y <= jogadores[id].y + BOUNCER_SIZE) || (inimigos[i].y + BOUNCER_SIZE >= jogadores[id].y && inimigos[i].y + BOUNCER_SIZE <= jogadores[id].y + BOUNCER_SIZE))
-					jogadores[id].vida --;
-}
-
-void verifica_inimigos_vivos()
-{
-	num_inimigos_vivos = 0;
-	for(int i = 0; i < num_inimigos; i++)
+	{
+		pthread_mutex_lock(&inimigos[i].mtx);
 		if(inimigos[i].vida > 0)
-			num_inimigos_vivos++;
+			if((inimigos[i].x >= jogadores[id].x && inimigos[i].x <= jogadores[id].x + BOUNCER_SIZE) || (inimigos[i].x + BOUNCER_SIZE >= jogadores[id].x && inimigos[i].x + BOUNCER_SIZE <= jogadores[id].x + BOUNCER_SIZE))
+					if((inimigos[i].y >= jogadores[id].y && inimigos[i].y <= jogadores[id].y + BOUNCER_SIZE) || (inimigos[i].y + BOUNCER_SIZE >= jogadores[id].y && inimigos[i].y + BOUNCER_SIZE <= jogadores[id].y + BOUNCER_SIZE))
+						jogadores[id].vida --;
+		pthread_mutex_unlock(&inimigos[i].mtx);
+	}
 }
 
 void atualiza()
@@ -120,7 +124,15 @@ void desenha_bg()
 	al_draw_textf(text, al_map_rgb(0,0,0), 850, 8,ALLEGRO_ALIGN_CENTRE, "%d",jogadores[num_jogadores-1].ammo);
 
 }
-	
+
+void desenha_fim()
+{
+	desenha_bg();
+	al_draw_text(font, al_map_rgb(0,0,0), 512, 300,ALLEGRO_ALIGN_CENTRE, "FIM DE JOGO!");
+	al_flip_display();
+	al_rest(3);
+}
+
 void desenha()
 {
 	desenha_bg();

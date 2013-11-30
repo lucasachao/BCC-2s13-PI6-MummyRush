@@ -33,7 +33,7 @@ int prepara_jogadores_client()
 	//jogador do cliente
 	jogadores[num_jogadores - 1].id = id_jogador;
 	jogadores[num_jogadores - 1].score = 0;
-	jogadores[num_jogadores - 1].vida = 10;
+	jogadores[num_jogadores - 1].vida = 100;
 	jogadores[num_jogadores - 1].angulo = 2;
 	jogadores[num_jogadores - 1].x = 50*id_jogador;
 	jogadores[num_jogadores - 1].y = 150;
@@ -48,7 +48,7 @@ int prepara_jogadores_client()
 	{
 		jogadores[i].id = id_jogadores[i];
 		jogadores[i].score = 0;
-		jogadores[i].vida = 10;
+		jogadores[i].vida = 100;
 		jogadores[i].angulo = 2;
 		jogadores[i].x = 50 + gap*(i+1);
 		jogadores[i].y = 150;

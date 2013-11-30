@@ -1,5 +1,6 @@
 #include "headers/jogo.h"
 #include "headers/menu.h"
+int aux;
 
 /*THREAD*/
 void *recebe_info(void *arg)
@@ -34,6 +35,18 @@ void *recebe_info(void *arg)
 //					printf("Movimento do inimigo %d!\n", buffer.id);
 					atualiza_inimigo_client(buffer);
 				break;
+
+				case 6:
+					finaliza_inimigos_client();
+					prepara_inimigos_client(aux*5);
+				break;
+
+				//fim de jogo
+				case 9:
+				printf("recebeu fim de jogo\n");
+				doexit = true;
+				return NULL;
+				break;
 			}
 			*at = true;
 		}
@@ -44,6 +57,7 @@ void *recebe_info(void *arg)
 /*MAIN*/
 int main()
 {
+	aux = 2;
 	//splashscreen / inicializa componetes do allegro
 	if(splash() == -1)
 		return -1;
@@ -117,6 +131,7 @@ int main()
 		printf("Erro ao tentar juntar thread do server!\n");
 	else
 		printf("thread do server encerrada com sucesso!\n");
+				desenha_fim();
 
 	finaliza_rede();
 	finaliza_jogo();//destroi imagens
